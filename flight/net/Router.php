@@ -64,7 +64,7 @@ class Router {
 
         if (strpos($pattern, ' ') !== false) {
             list($method, $url) = explode(' ', trim($pattern), 2);
-
+            $url = trim($url);
             $methods = explode('|', $method);
         }
 
@@ -78,8 +78,9 @@ class Router {
      * @return Route|bool Matching route or false if no match
      */
     public function route(Request $request) {
+        $url_decoded = urldecode( $request->url );
         while ($route = $this->current()) {
-            if ($route !== false && $route->matchMethod($request->method) && $route->matchUrl($request->url, $this->case_sensitive)) {
+            if ($route !== false && $route->matchMethod($request->method) && $route->matchUrl($url_decoded, $this->case_sensitive)) {
                 return $route;
             }
             $this->next();

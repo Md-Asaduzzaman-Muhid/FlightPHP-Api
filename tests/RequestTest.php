@@ -22,8 +22,8 @@ class RequestTest extends PHPUnit_Framework_TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
         $_SERVER['REMOTE_ADDR'] = '8.8.8.8';
-        $_SERVER['HTTPS'] = 'on';
         $_SERVER['HTTP_X_FORWARDED_FOR'] = '32.32.32.32';
+        $_SERVER['HTTP_HOST'] = 'example.com';
 
         $this->request = new \flight\net\Request();
     }
@@ -34,11 +34,12 @@ class RequestTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('GET', $this->request->method);
         $this->assertEquals('', $this->request->referrer);
         $this->assertEquals(true, $this->request->ajax);
-        $this->assertEquals('HTTP/1.1', $this->request->scheme);
+        $this->assertEquals('http', $this->request->scheme);
         $this->assertEquals('', $this->request->type);
         $this->assertEquals(0, $this->request->length);
-        $this->assertEquals(true, $this->request->secure);
+        $this->assertEquals(false, $this->request->secure);
         $this->assertEquals('', $this->request->accept);
+        $this->assertEquals('example.com', $this->request->host);
     }
 
     function testIpAddress() {
@@ -95,5 +96,35 @@ class RequestTest extends PHPUnit_Framework_TestCase
         $request = new \flight\net\Request();
 
         $this->assertEquals('PUT', $request->method);
+    }
+
+    function testHttps() {
+        $_SERVER['HTTPS'] = 'on';
+        $request = new \flight\net\Request();
+        $this->assertEquals('https', $request->scheme);
+        $_SERVER['HTTPS'] = 'off';
+        $request = new \flight\net\Request();
+        $this->assertEquals('http', $request->scheme);
+
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+        $request = new \flight\net\Request();
+        $this->assertEquals('https', $request->scheme);
+        $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+        $request = new \flight\net\Request();
+        $this->assertEquals('http', $request->scheme);
+
+        $_SERVER['HTTP_FRONT_END_HTTPS'] = 'on';
+        $request = new \flight\net\Request();
+        $this->assertEquals('https', $request->scheme);
+        $_SERVER['HTTP_FRONT_END_HTTPS'] = 'off';
+        $request = new \flight\net\Request();
+        $this->assertEquals('http', $request->scheme);
+
+        $_SERVER['REQUEST_SCHEME'] = 'https';
+        $request = new \flight\net\Request();
+        $this->assertEquals('https', $request->scheme);
+        $_SERVER['REQUEST_SCHEME'] = 'http';
+        $request = new \flight\net\Request();
+        $this->assertEquals('http', $request->scheme);
     }
 }
